@@ -53,7 +53,6 @@ python3 -m http.server 8000
 ## Known limitations
 
 - Free public APIs are rate-limited; heavy refreshing may temporarily fail.
-- The whale mascot (Grumbles 🐋) is decorative and has no functional purpose.
 - The FAQ assistant runs on fixed keyword matching, not a language model.
 - Browser notifications for Alerts require the page to stay open in a tab.
 
