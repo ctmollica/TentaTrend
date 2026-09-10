@@ -1,7 +1,5 @@
 # 🐙 TentaTrend
 
-*Tentacles are trustworthy. Whales aren't.*
-
 TentaTrend is a single-page crypto dashboard built as a CS passion project. It tracks live prices, momentum signals, news, and price alerts for coins listed on both Coinbase and Crypto.com — no backend, no build step, no API keys. Just open the page.
 
 > **Not financial advice.** Nobody can reliably predict crypto prices. The "trend signal" here is a basic 7-day/21-day moving-average crossover, included for learning purposes, not trading decisions.
