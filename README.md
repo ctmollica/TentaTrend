@@ -1,4 +1,4 @@
-# 🐙 TentaTrend
+# 🐙 TentaTrend v1.1
 
 TentaTrend is a single-page crypto dashboard built as a CS passion project. It tracks live prices, momentum signals, news, and price alerts for coins listed on both Coinbase and Crypto.com — no backend, no build step, no API keys. Just open the page.
 
