@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TentaTrend — crypto trend signals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0c1a22;
+    --bg-panel: #11232d;
+    --bg-card: #142832;
+    --ink: #e8f1ee;
+    --ink-dim: #91a8a5;
+    --teal: #2a9d8f;
+    --teal-bright: #4fc0b1;
+    --up: #4caf7d;
+    --down: #d97a6c;
+    --line: #1f3640;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header{ display:flex; align-items:center; gap:16px; margin-bottom: 8px; }
+  header svg{ width:52px; height:52px; flex-shrink:0; }
+  .brand h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size: 30px;
+    margin:0;
+    letter-spacing: -0.01em;
+  }
+  .brand p{ margin:2px 0 0; color: var(--ink-dim); font-size: 14px; }
+  .brand p.slogan{
+    color: var(--teal-bright);
+    font-style: italic;
+    font-weight: 500;
+    margin: 4px 0 2px;
+  }
+
+  .disclaimer{
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin: 28px 0 32px;
+    font-size: 14px;
+    color: var(--ink-dim);
+  }
+  .disclaimer strong{ color: var(--ink); font-weight:500; }
+
+  .status{ font-size: 13px; color: var(--ink-dim); margin-bottom: 18px; min-height: 18px; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .card{
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card-top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .coin-name{ font-family:'Space Grotesk', sans-serif; font-size: 17px; font-weight:500; }
+  .coin-sym{ color: var(--ink-dim); font-size: 13px; margin-left: 6px; }
+  .exch-tags{ display:flex; gap:6px; margin-top:6px; }
+  .exch-tag{
+    font-size: 11px;
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+
+  .price{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    margin: 14px 0 2px;
+  }
+  .change{ font-size: 14px; font-weight: 500; }
+  .change.up{ color: var(--up); }
+  .change.down{ color: var(--down); }
+
+  .signal{
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+  }
+  .signal-label{ font-size: 13px; color: var(--ink-dim); }
+  .signal-badge{
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .signal-badge.bullish{ background: rgba(76,175,125,0.15); color: var(--up); }
+  .signal-badge.bearish{ background: rgba(217,122,108,0.15); color: var(--down); }
+  .signal-badge.flat{ background: rgba(145,168,165,0.15); color: var(--ink-dim); }
+
+  .sparkline{ margin-top: 12px; width: 100%; height: 40px; display:block; }
+
+  .error-card{
+    grid-column: 1 / -1;
+    text-align:center;
+    color: var(--down);
+    font-size: 14px;
+  }
+
+  footer{
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 13px;
+  }
+  footer a{ color: var(--teal-bright); }
+
+  /* Tabs */
+  .tabs{ display:flex; gap:4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .tab{
+    background:none; border:none; cursor:pointer;
+    color: var(--ink-dim); font-family:'Inter',sans-serif; font-size: 14px;
+    padding: 10px 4px; margin-right: 20px;
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active{ color: var(--ink); border-bottom-color: var(--teal-bright); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  /* News */
+  .news-list{ display:flex; flex-direction:column; gap:12px; }
+  .news-card{
+    display:flex; gap:14px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    text-decoration:none;
+    color: inherit;
+  }
+  .news-card img{
+    width: 84px; height: 84px; object-fit: cover; border-radius: 6px;
+    flex-shrink:0; background: var(--bg-panel);
+  }
+  .news-body{ min-width:0; }
+  .news-title{
+    font-size: 15px; font-weight:500; margin:0 0 6px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .news-meta{ font-size: 12px; color: var(--ink-dim); }
+
+  /* Alerts */
+  .alert-form{
+    display:flex; gap:8px; flex-wrap:wrap;
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; margin-bottom: 18px;
+  }
+  .alert-form select, .alert-form input{
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 6px;
+    color: var(--ink); font-family:'Inter',sans-serif; font-size: 13px; padding: 8px 10px;
+  }
+  .alert-form input{ width: 130px; }
+  .alert-form button{
+    background: var(--teal); border:none; border-radius: 6px; color:white;
+    font-family:'Inter',sans-serif; font-size: 13px; font-weight:500; padding: 8px 16px; cursor:pointer;
+  }
+  .alert-row{
+    display:flex; justify-content:space-between; align-items:center;
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px 16px; margin-bottom: 10px; font-size: 14px;
+  }
+  .alert-row.fired{ border-color: var(--teal-bright); }
+  .alert-row .alert-desc{ display:flex; align-items:center; gap:10px; }
+  .alert-status{ font-size: 12px; color: var(--ink-dim); }
+  .alert-status.fired{ color: var(--teal-bright); font-weight:500; }
+  .alert-remove{
+    background:none; border:none; color: var(--ink-dim); cursor:pointer; font-size: 18px; line-height:1;
+  }
+  .alert-empty{ color: var(--ink-dim); font-size: 14px; }
+
+  /* Whales */
+  .whale-header{
+    display:flex; align-items:center; gap:16px;
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 20px; margin-bottom: 20px;
+  }
+  .whale-name{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 18px; }
+  .whale-sub{ font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
+  .whale-amount{ color: var(--teal-bright); font-weight:600; }
+
+  /* Trade links + detail trigger */
+  .trade-links{ display:flex; gap:8px; margin-top: 14px; }
+  .trade-btn{
+    flex:1; text-align:center; text-decoration:none;
+    font-size: 12.5px; font-weight:500; padding: 8px 6px; border-radius: 6px;
+    border: 1px solid var(--line);
+  }
+  .trade-btn.coinbase{ color: #0052ff; border-color: rgba(0,82,255,0.35); }
+  .trade-btn.cryptocom{ color: #103f68; border-color: rgba(16,63,104,0.35); background: rgba(16,63,104,0.06); }
+  .detail-btn{
+    width:100%; margin-top: 10px;
+    background: none; border: none; cursor: pointer;
+    color: var(--teal-bright); font-family:'Inter',sans-serif; font-size: 13px; font-weight:500;
+    text-align:left; padding: 4px 0;
+  }
+  .detail-btn:hover{ text-decoration: underline; }
+
+  /* Modal */
+  #modal-overlay{
+    position: fixed; inset:0; background: rgba(4,10,14,0.72);
+    display:none; align-items:center; justify-content:center;
+    z-index: 60; padding: 20px;
+  }
+  #modal-overlay.open{ display:flex; }
+  #modal-content{
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    width: 100%; max-width: 560px; max-height: 88vh; overflow-y:auto;
+    padding: 24px;
+  }
+  .modal-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 6px; }
+  .modal-title{ font-family:'Space Grotesk', sans-serif; font-size: 22px; font-weight:700; }
+  .modal-close{ background:none; border:none; color: var(--ink-dim); font-size:24px; cursor:pointer; line-height:1; }
+  .modal-price{ font-family:'Space Grotesk', sans-serif; font-size: 32px; font-weight:700; margin: 6px 0 2px; }
+  .big-chart{ width:100%; height: 160px; margin: 18px 0; display:block; }
+  .stats-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-top: 8px; }
+  .stat-label{ font-size: 12px; color: var(--ink-dim); }
+  .stat-value{ font-size: 14px; font-weight:500; margin-top: 2px; }
+  .modal-trade{ display:flex; gap:10px; margin-top: 22px; }
+  .modal-trade .trade-btn{ padding: 10px; font-size: 13.5px; }
+
+  /* Chat widget */
+  #chat-toggle{
+    position: fixed; right: 24px; bottom: 24px;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--teal); color: white; border: none; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    z-index: 40; padding: 0;
+  }
+  #chat-panel{
+    position: fixed; right: 24px; bottom: 88px;
+    width: 320px; max-width: calc(100vw - 48px);
+    max-height: 460px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    display:none;
+    flex-direction: column;
+    overflow:hidden;
+    z-index: 40;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  }
+  #chat-panel.open{ display:flex; }
+  .chat-header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 12px 14px; border-bottom: 1px solid var(--line);
+    font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:14px;
+  }
+  .chat-header{ gap: 6px; }
+  .chat-header span{ flex:1; }
+  .chat-header button{ background:none; border:none; color: var(--ink-dim); font-size:20px; cursor:pointer; line-height:1; }
+  #chat-settings-toggle{ font-size:15px !important; }
+  .chat-sub{ font-size: 11px; color: var(--ink-dim); padding: 0 14px 10px; border-bottom: 1px solid var(--line); }
+  #chat-settings{
+    display:none; flex-direction:column; gap:6px; padding: 10px 14px;
+    border-bottom: 1px solid var(--line); background: var(--bg-card);
+  }
+  #chat-settings.open{ display:flex; }
+  .chat-settings-row{ display:flex; align-items:center; gap:8px; font-size:12px; color: var(--ink); cursor:pointer; }
+  #ai-key-input{
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 6px;
+    color: var(--ink); font-family:'Inter',sans-serif; font-size: 12px; padding: 7px 9px;
+    display:none;
+  }
+  #ai-key-input.open{ display:block; }
+  .chat-settings-note{ font-size: 10.5px; color: var(--ink-dim); line-height:1.4; margin:0; }
+  .chat-settings-note a{ color: var(--teal); }
+  #chat-log{ flex:1; overflow-y:auto; padding: 12px 14px; display:flex; flex-direction:column; gap:10px; }
+  .msg{ font-size: 13px; padding: 8px 10px; border-radius: 8px; max-width: 88%; white-space: pre-wrap; }
+  .msg.bot{ background: var(--bg-card); align-self:flex-start; }
+  .msg.user{ background: var(--teal); color:white; align-self:flex-end; }
+  .msg.typing{ background: var(--bg-card); align-self:flex-start; color: var(--ink-dim); font-style: italic; }
+  .msg.error{ background: rgba(220,80,80,0.15); border: 1px solid rgba(220,80,80,0.4); align-self:flex-start; }
+  #chat-form{ display:flex; gap:8px; padding: 10px; border-top: 1px solid var(--line); }
+  #chat-input{
+    flex:1; background: var(--bg-card); border: 1px solid var(--line); border-radius: 6px;
+    color: var(--ink); font-family:'Inter',sans-serif; font-size: 13px; padding: 8px 10px;
+  }
+  #chat-form button{
+    background: var(--teal); border:none; border-radius:6px; color:white; width:36px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="80" rx="55" ry="48" fill="#2a9d8f"/>
+      <path d="M 60 100 Q 40 140 48 175 Q 52 192 68 182 Q 76 176 70 152 Q 64 128 68 108 Z" fill="#2a9d8f"/>
+      <path d="M 78 112 Q 68 150 80 185 Q 86 202 100 190 Q 108 183 98 158 Q 90 132 90 116 Z" fill="#2a9d8f"/>
+      <path d="M 100 116 Q 100 155 108 190 Q 112 205 126 195 Q 133 189 125 164 Q 116 132 114 118 Z" fill="#2a9d8f"/>
+      <path d="M 122 112 Q 138 150 128 185 Q 122 202 108 190" fill="none" stroke="none"/>
+      <path d="M 122 108 Q 145 140 138 172 Q 133 190 148 178 Q 158 170 152 148 Q 145 118 132 112 Z" fill="#2a9d8f"/>
+      <path d="M 138 98 Q 165 118 168 148 Q 170 168 152 158 Q 143 153 146 132 Q 148 108 132 100 Z" fill="#2a9d8f"/>
+      <ellipse cx="80" cy="72" rx="12" ry="14" fill="#ffffff"/>
+      <ellipse cx="122" cy="72" rx="12" ry="14" fill="#ffffff"/>
+      <circle cx="83" cy="76" r="5.5" fill="#0c1a22"/>
+      <circle cx="125" cy="76" r="5.5" fill="#0c1a22"/>
+    </svg>
+    <div class="brand">
+      <h1>TentaTrend</h1>
+      <p>Trend signals for coins listed on Coinbase &amp; Crypto.com</p>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+    <strong>This is not financial advice.</strong> Nobody can reliably predict crypto prices — this dashboard
+    only shows a short-term momentum signal (7-day vs 21-day moving average crossover) built from public
+    market data. Treat it as a learning project, not a trading tool.
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="prices" role="tab" aria-selected="true">Prices</button>
+    <button class="tab" data-tab="news" role="tab" aria-selected="false">News</button>
+    <button class="tab" data-tab="alerts" role="tab" aria-selected="false">Alerts</button>
+    <button class="tab" data-tab="whales" role="tab" aria-selected="false">Whales</button>
+  </nav>
+
+  <section id="panel-prices" class="tab-panel active">
+    <div class="status" id="status">Loading live data…</div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="panel-news" class="tab-panel">
+    <div class="status" id="news-status">Loading latest news…</div>
+    <div class="news-list" id="news-list"></div>
+  </section>
+
+  <section id="panel-alerts" class="tab-panel">
+    <div class="disclaimer">
+      Alerts are checked entirely in your browser against the live prices above (refreshed every 30s while this
+      tab is open). Nothing is sent anywhere. Browser notifications require you to grant permission once.
+    </div>
+    <form id="alert-form" class="alert-form">
+      <select id="alert-coin"></select>
+      <select id="alert-direction">
+        <option value="above">rises above</option>
+        <option value="below">falls below</option>
+      </select>
+      <input id="alert-price" type="number" step="any" min="0" placeholder="Price (USD)" required>
+      <button type="submit">Add alert</button>
+    </form>
+    <div id="alert-list"></div>
+  </section>
+
+  <section id="panel-whales" class="tab-panel">
+    <div class="whale-header">
+      <svg viewBox="0 0 200 200" width="72" height="72" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="100" cy="105" rx="78" ry="62" fill="#3d6b8c"/>
+        <path d="M 30 130 Q 8 140 4 168 Q 2 182 18 174 Q 34 166 42 148 Z" fill="#3d6b8c"/>
+        <path d="M 170 130 Q 192 140 196 168 Q 198 182 182 174 Q 166 166 158 148 Z" fill="#3d6b8c"/>
+        <path d="M 100 44 Q 92 24 100 8 Q 108 24 100 44 Z" fill="#3d6b8c"/>
+        <circle cx="88" cy="18" r="4" fill="#a9c7d6"/>
+        <circle cx="100" cy="10" r="3" fill="#a9c7d6"/>
+        <ellipse cx="72" cy="100" rx="16" ry="18" fill="#ffffff"/>
+        <ellipse cx="128" cy="100" rx="16" ry="18" fill="#ffffff"/>
+        <circle cx="75" cy="104" r="7" fill="#0c1a22"/>
+        <circle cx="125" cy="104" r="7" fill="#0c1a22"/>
+      </svg>
+      <div>
+        <div class="whale-name">Whale watch</div>
+        <div class="whale-sub">News headlines flagged for large-transaction language.</div>
+      </div>
+    </div>
+    <div class="disclaimer">
+      No free, keyless API actually exposes raw wallet-to-wallet transaction data (the real
+      services require a paid key). This tab instead surfaces real news coverage of large
+      crypto moves, filtered from the same feed as the News tab.
+    </div>
+    <div class="status" id="whale-status">Loading whale activity…</div>
+    <div id="whale-list" class="news-list"></div>
+  </section>
+
+  <footer>
+    Price and history data from the <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener">CoinGecko public API</a>.
+    News and whale headlines via <a href="https://rss2json.com" target="_blank" rel="noopener">rss2json</a>, sourced from CoinDesk and Cointelegraph.
+    Coin list limited to assets tradable on both Coinbase and Crypto.com. Refreshes on page load.
+  </footer>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal-content"></div>
+</div>
+
+<button id="chat-toggle" aria-label="Open support assistant: Inky">
+  <svg viewBox="0 0 200 200" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="100" cy="80" rx="55" ry="48" fill="#ffffff"/>
+    <path d="M 60 100 Q 40 140 48 175 Q 52 192 68 182 Q 76 176 70 152 Q 64 128 68 108 Z" fill="#ffffff"/>
+    <path d="M 78 112 Q 68 150 80 185 Q 86 202 100 190 Q 108 183 98 158 Q 90 132 90 116 Z" fill="#ffffff"/>
+    <path d="M 100 116 Q 100 155 108 190 Q 112 205 126 195 Q 133 189 125 164 Q 116 132 114 118 Z" fill="#ffffff"/>
+    <path d="M 122 108 Q 145 140 138 172 Q 133 190 148 178 Q 158 170 152 148 Q 145 118 132 112 Z" fill="#ffffff"/>
+    <path d="M 138 98 Q 165 118 168 148 Q 170 168 152 158 Q 143 153 146 132 Q 148 108 132 100 Z" fill="#ffffff"/>
+    <ellipse cx="80" cy="72" rx="12" ry="14" fill="#2a9d8f"/>
+    <ellipse cx="122" cy="72" rx="12" ry="14" fill="#2a9d8f"/>
+    <circle cx="83" cy="76" r="5.5" fill="#ffffff"/>
+    <circle cx="125" cy="76" r="5.5" fill="#ffffff"/>
+  </svg>
+</button>
+
+<div id="chat-panel">
+  <div class="chat-header">
+    <span>🐙 Inky · Support</span>
+    <button id="chat-settings-toggle" aria-label="Inky settings" title="Settings">⚙</button>
+    <button id="chat-close" aria-label="Close">×</button>
+  </div>
+  <div class="chat-sub" id="chat-sub">Instant answers from a fixed FAQ, with live data for price/trend questions.</div>
+  <div id="chat-settings">
+    <label class="chat-settings-row">
+      <input type="checkbox" id="ai-mode-toggle">
+      Let Inky ask real Claude for anything the FAQ can't answer
+    </label>
+    <input type="password" id="ai-key-input" placeholder="Your Anthropic API key (sk-ant-...)" autocomplete="off">
+    <p class="chat-settings-note">
+      Your key stays in this browser tab only — it's used to call Anthropic's API directly from your device and is
+      never sent anywhere else, and is forgotten when you close the tab. Get one at
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
+    </p>
+  </div>
+  <div id="chat-log"></div>
+  <form id="chat-form">
+    <input id="chat-input" type="text" placeholder="Ask Inky about signals, coins, data…" autocomplete="off">
+    <button type="submit" aria-label="Send">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </form>
+</div>
+
+<script>
+// Coins chosen because they're commonly listed on both Coinbase and Crypto.com
+const COINS = [
+  { id: 'bitcoin',  symbol: 'BTC' },
+  { id: 'ethereum', symbol: 'ETH' },
+  { id: 'solana',   symbol: 'SOL' },
+  { id: 'cardano',  symbol: 'ADA' },
+  { id: 'dogecoin', symbol: 'DOGE' },
+  { id: 'chainlink',symbol: 'LINK' },
+  { id: 'litecoin', symbol: 'LTC' },
+  { id: 'polkadot', symbol: 'DOT' }
+];
+
+// Trustworthy, well-known exchange pages for each coin (no login/API required to view)
+function tradeLinks(coinId){
+  return {
+    coinbase: `https://www.coinbase.com/price/${coinId}`,
+    cryptocom: `https://crypto.com/price/${coinId}`
+  };
+}
+
+const grid = document.getElementById('grid');
+const statusEl = document.getElementById('status');
+const coinStore = {}; // coinId -> { market, chartPrices }
+
+function fmtPrice(p){
+  if (p >= 1000) return '$' + p.toLocaleString(undefined, {maximumFractionDigits:0});
+  if (p >= 1) return '$' + p.toLocaleString(undefined, {maximumFractionDigits:2});
+  return '$' + p.toLocaleString(undefined, {maximumFractionDigits:5});
+}
+
+function fmtLarge(n){
+  if (n == null) return '—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  return '$' + n.toLocaleString(undefined, {maximumFractionDigits:0});
+}
+
+function fmtSupply(n, symbol){
+  if (n == null) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B ' + symbol;
+  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M ' + symbol;
+  return n.toLocaleString(undefined, {maximumFractionDigits:0}) + ' ' + symbol;
+}
+
+function sma(values, window){
+  if (values.length < window) return null;
+  const slice = values.slice(-window);
+  return slice.reduce((a,b) => a+b, 0) / window;
+}
+
+function buildSparkline(values){
+  const w = 240, h = 40, pad = 3;
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const step = (w - pad*2) / (values.length - 1);
+  const pts = values.map((v,i) => {
+    const x = pad + i*step;
+    const y = h - pad - ((v - min) / range) * (h - pad*2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const trendColor = values[values.length-1] >= values[0] ? '#4caf7d' : '#d97a6c';
+  return `<svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${trendColor}" stroke-width="1.5"/>
+  </svg>`;
+}
+
+function trendSignal(chartPrices){
+  if (chartPrices && chartPrices.length >= 21){
+    const short = sma(chartPrices, 7);
+    const long = sma(chartPrices, 21);
+    if (short && long){
+      const diffPct = ((short - long) / long) * 100;
+      if (diffPct > 0.5) return { html: `<span class="signal-badge bullish">bullish crossover</span>`, text: 'Bullish crossover' };
+      if (diffPct < -0.5) return { html: `<span class="signal-badge bearish">bearish crossover</span>`, text: 'Bearish crossover' };
+      return { html: `<span class="signal-badge flat">flat / no signal</span>`, text: 'Flat / no signal' };
+    }
+  }
+  return { html: `<span class="signal-badge flat">not enough data</span>`, text: 'Not enough data' };
+}
+
+function renderCard(coin, market, chartPrices){
+  const price = market.current_price;
+  const change24h = market.price_change_percentage_24h || 0;
+  const changeClass = change24h >= 0 ? 'up' : 'down';
+  const changeSign = change24h >= 0 ? '+' : '';
+  const links = tradeLinks(coin.id);
+  const signal = trendSignal(chartPrices);
+  const sparkHtml = chartPrices && chartPrices.length > 1 ? buildSparkline(chartPrices) : '';
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-top">
+      <div>
+        <span class="coin-name">${coin.id.charAt(0).toUpperCase() + coin.id.slice(1)}</span>
+        <span class="coin-sym">${coin.symbol}</span>
+      </div>
+    </div>
+    <div class="exch-tags">
+      <span class="exch-tag">Coinbase</span>
+      <span class="exch-tag">Crypto.com</span>
+    </div>
+    <div class="price">${fmtPrice(price)}</div>
+    <div class="change ${changeClass}">${changeSign}${change24h.toFixed(2)}% · 24h</div>
+    ${sparkHtml}
+    <div class="signal">
+      <span class="signal-label">30d trend signal</span>
+      ${signal.html}
+    </div>
+    <div class="trade-links">
+      <a href="${links.coinbase}" target="_blank" rel="noopener" class="trade-btn coinbase">Buy on Coinbase</a>
+      <a href="${links.cryptocom}" target="_blank" rel="noopener" class="trade-btn cryptocom">Buy on Crypto.com</a>
+    </div>
+    <button class="detail-btn" data-coin="${coin.id}">View chart &amp; data →</button>
+  `;
+  grid.appendChild(card);
+  card.querySelector('.detail-btn').addEventListener('click', () => openModal(coin.id));
+}
+
+async function loadData(){
+  try{
+    const ids = COINS.map(c => c.id).join(',');
+    const marketRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`);
+    if (!marketRes.ok) throw new Error('market data fetch failed');
+    const marketList = await marketRes.json();
+    const marketById = {};
+    marketList.forEach(m => { marketById[m.id] = m; });
+
+    statusEl.textContent = 'Loading 30-day history…';
+
+    const chartResults = await Promise.all(COINS.map(async (coin) => {
+      try{
+        const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=usd&days=30&interval=daily`);
+        if (!r.ok) return null;
+        const j = await r.json();
+        return j.prices ? j.prices.map(p => p[1]) : null;
+      } catch(e){ return null; }
+    }));
+
+    grid.innerHTML = '';
+    COINS.forEach((coin, i) => {
+      const market = marketById[coin.id];
+      if (!market) return;
+      coinStore[coin.id] = { market, chartPrices: chartResults[i] };
+      renderCard(coin, market, chartResults[i]);
+    });
+
+    statusEl.textContent = 'Live · updated ' + new Date().toLocaleTimeString();
+    if (typeof checkAlerts === 'function') checkAlerts();
+  } catch(err){
+    statusEl.textContent = '';
+    grid.innerHTML = `<div class="error-card">Couldn't load live market data right now (${err.message}). CoinGecko's API may be rate-limiting or unreachable from this network — try reloading in a minute.</div>`;
+  }
+}
+
+loadData();
+setInterval(loadData, 60000);
+
+// ---------- Coin detail modal ----------
+function buildBigChart(values){
+  const w = 520, h = 160, pad = 10;
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const step = (w - pad*2) / (values.length - 1);
+  const pts = values.map((v,i) => {
+    const x = pad + i*step;
+    const y = h - pad - ((v - min) / range) * (h - pad*2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const areaPts = `${pad},${h-pad} ${pts} ${w-pad},${h-pad}`;
+  const trendColor = values[values.length-1] >= values[0] ? '#4caf7d' : '#d97a6c';
+  return `<svg class="big-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polygon points="${areaPts}" fill="${trendColor}" opacity="0.08"/>
+    <polyline points="${pts}" fill="none" stroke="${trendColor}" stroke-width="2"/>
+  </svg>`;
+}
+
+const modalOverlay = document.getElementById('modal-overlay');
+const modalContent = document.getElementById('modal-content');
+
+function openModal(coinId){
+  const entry = coinStore[coinId];
+  if (!entry) return;
+  const { market, chartPrices } = entry;
+  const coin = COINS.find(c => c.id === coinId);
+  const links = tradeLinks(coinId);
+  const change24h = market.price_change_percentage_24h || 0;
+  const changeClass = change24h >= 0 ? 'up' : 'down';
+  const changeSign = change24h >= 0 ? '+' : '';
+  const chartHtml = chartPrices && chartPrices.length > 1
+    ? buildBigChart(chartPrices)
+    : `<div style="color:var(--ink-dim); font-size:13px; padding: 40px 0; text-align:center;">Chart data unavailable</div>`;
+  const athChange = market.ath_change_percentage;
+
+  modalContent.innerHTML = `
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">${coin.id.charAt(0).toUpperCase() + coin.id.slice(1)} <span class="coin-sym">${coin.symbol}</span></div>
+      </div>
+      <button class="modal-close" aria-label="Close">×</button>
+    </div>
+    <div class="modal-price">${fmtPrice(market.current_price)}</div>
+    <div class="change ${changeClass}">${changeSign}${change24h.toFixed(2)}% · 24h</div>
+    ${chartHtml}
+    <div class="stats-grid">
+      <div><div class="stat-label">Market cap</div><div class="stat-value">${fmtLarge(market.market_cap)}</div></div>
+      <div><div class="stat-label">24h volume</div><div class="stat-value">${fmtLarge(market.total_volume)}</div></div>
+      <div><div class="stat-label">24h high</div><div class="stat-value">${fmtPrice(market.high_24h)}</div></div>
+      <div><div class="stat-label">24h low</div><div class="stat-value">${fmtPrice(market.low_24h)}</div></div>
+      <div><div class="stat-label">Circulating supply</div><div class="stat-value">${fmtSupply(market.circulating_supply, coin.symbol)}</div></div>
+      <div><div class="stat-label">All-time high</div><div class="stat-value">${fmtPrice(market.ath)} ${athChange != null ? `(${athChange.toFixed(1)}%)` : ''}</div></div>
+    </div>
+    <div class="modal-trade">
+      <a href="${links.coinbase}" target="_blank" rel="noopener" class="trade-btn coinbase">Buy on Coinbase</a>
+      <a href="${links.cryptocom}" target="_blank" rel="noopener" class="trade-btn cryptocom">Buy on Crypto.com</a>
+    </div>
+  `;
+  modalContent.querySelector('.modal-close').addEventListener('click', closeModal);
+  modalOverlay.classList.add('open');
+}
+
+function closeModal(){ modalOverlay.classList.remove('open'); }
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'news' && !newsLoaded) loadNews();
+    if (btn.dataset.tab === 'whales' && !whalesLoaded) loadWhales();
+  });
+});
+
+// ---------- News (shared pipeline, also feeds the Whales tab) ----------
+const NEWS_FEEDS = [
+  { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', name: 'CoinDesk' },
+  { url: 'https://cointelegraph.com/rss', name: 'Cointelegraph' }
+];
+
+let newsLoaded = false;
+let cachedNewsItems = null; // reused by the Whales tab so we don't double-fetch
+
+async function fetchRssFeed(feed){
+  const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'feed error');
+  return (json.items || []).map(item => ({ ...item, sourceName: feed.name }));
+}
+
+async function fetchAllNews(){
+  if (cachedNewsItems) return cachedNewsItems;
+  const results = await Promise.allSettled(NEWS_FEEDS.map(fetchRssFeed));
+  const items = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
+  if (!items.length){
+    const firstError = results.find(r => r.status === 'rejected');
+    throw firstError ? firstError.reason : new Error('no feeds returned data');
+  }
+  items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  cachedNewsItems = items;
+  return items;
+}
+
+function fmtNewsDate(pubDate){
+  const d = new Date(pubDate);
+  return isNaN(d) ? '' : d.toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+async function loadNews(){
+  const newsStatus = document.getElementById('news-status');
+  const newsList = document.getElementById('news-list');
+  try{
+    const items = (await fetchAllNews()).slice(0, 15);
+    newsList.innerHTML = items.map(a => `<a class="news-card" href="${a.link}" target="_blank" rel="noopener">
+        <div class="news-body" style="width:100%">
+          <p class="news-title">${a.title}</p>
+          <div class="news-meta">${a.sourceName} · ${fmtNewsDate(a.pubDate)}</div>
+        </div>
+      </a>`).join('');
+    newsStatus.textContent = 'Live · updated ' + new Date().toLocaleTimeString();
+    newsLoaded = true;
+  } catch(err){
+    newsStatus.textContent = '';
+    newsList.innerHTML = `<div class="error-card">Couldn't load news right now (${err.message}). Try reopening this tab in a minute.</div>`;
+  }
+}
+
+// ---------- Alerts ----------
+const alertCoinSelect = document.getElementById('alert-coin');
+const alertForm = document.getElementById('alert-form');
+const alertListEl = document.getElementById('alert-list');
+let alerts = []; // { id, coinId, direction, threshold, fired }
+let alertIdSeq = 1;
+
+alertCoinSelect.innerHTML = COINS.map(c => `<option value="${c.id}">${c.symbol} — ${c.id.charAt(0).toUpperCase()+c.id.slice(1)}</option>`).join('');
+
+function renderAlerts(){
+  if (!alerts.length){
+    alertListEl.innerHTML = `<div class="alert-empty">No alerts yet — add one above.</div>`;
+    return;
+  }
+  alertListEl.innerHTML = alerts.map(a => {
+    const coin = COINS.find(c => c.id === a.coinId);
+    const current = coinStore[a.coinId]?.market?.current_price;
+    return `<div class="alert-row ${a.fired ? 'fired' : ''}">
+      <div class="alert-desc">
+        <span>${coin.symbol} ${a.direction === 'above' ? 'rises above' : 'falls below'} ${fmtPrice(a.threshold)}</span>
+        <span class="alert-status ${a.fired ? 'fired' : ''}">${a.fired ? 'Triggered!' : (current ? 'Currently ' + fmtPrice(current) : 'Waiting for price data…')}</span>
+      </div>
+      <button class="alert-remove" data-id="${a.id}" aria-label="Remove alert">×</button>
+    </div>`;
+  }).join('');
+  alertListEl.querySelectorAll('.alert-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      alerts = alerts.filter(a => a.id !== Number(btn.dataset.id));
+      renderAlerts();
+    });
+  });
+}
+
+alertForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const coinId = alertCoinSelect.value;
+  const direction = document.getElementById('alert-direction').value;
+  const threshold = parseFloat(document.getElementById('alert-price').value);
+  if (!threshold || threshold <= 0) return;
+  alerts.push({ id: alertIdSeq++, coinId, direction, threshold, fired: false });
+  document.getElementById('alert-price').value = '';
+  if ('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+  renderAlerts();
+  checkAlerts();
+});
+
+function checkAlerts(){
+  let changed = false;
+  alerts.forEach(a => {
+    if (a.fired) return;
+    const price = coinStore[a.coinId]?.market?.current_price;
+    if (price == null) return;
+    const hit = a.direction === 'above' ? price >= a.threshold : price <= a.threshold;
+    if (hit){
+      a.fired = true;
+      changed = true;
+      const coin = COINS.find(c => c.id === a.coinId);
+      const msg = `${coin.symbol} ${a.direction === 'above' ? 'rose above' : 'fell below'} ${fmtPrice(a.threshold)} (now ${fmtPrice(price)})`;
+      if ('Notification' in window && Notification.permission === 'granted'){
+        new Notification('TentaTrend alert', { body: msg });
+      }
+    }
+  });
+  if (changed) renderAlerts();
+}
+renderAlerts();
+setInterval(() => { renderAlerts(); checkAlerts(); }, 30000);
+
+// ---------- Whales ----------
+// No free/keyless API actually provides raw on-chain whale-transaction data (Whale Alert
+// and similar all require a paid key). Instead this filters the same reliable news feed
+// for whale-related headlines — real coverage of large moves, clearly labeled as such.
+let whalesLoaded = false;
+const WHALE_KEYWORDS = /whale|\$\d+(\.\d+)?\s?(million|billion|m\b|b\b)|moved \$|transferred \$|dumped|accumulat|large transfer|mega\s?wallet/i;
+
+async function loadWhales(){
+  const whaleStatus = document.getElementById('whale-status');
+  const whaleList = document.getElementById('whale-list');
+  try{
+    const allItems = await fetchAllNews();
+    const items = allItems.filter(a => WHALE_KEYWORDS.test(a.title) || WHALE_KEYWORDS.test(a.description || '')).slice(0, 15);
+
+    if (!items.length){
+      whaleStatus.textContent = 'Live · updated ' + new Date().toLocaleTimeString();
+      whaleList.innerHTML = `<div class="alert-empty">No whale-flagged headlines in the current feed right now — check back later.</div>`;
+      whalesLoaded = true;
+      return;
+    }
+
+    whaleList.innerHTML = items.map(a => `<a class="news-card" href="${a.link}" target="_blank" rel="noopener">
+        <div class="news-body" style="width:100%">
+          <p class="news-title">${a.title}</p>
+          <div class="news-meta">${a.sourceName} · ${fmtNewsDate(a.pubDate)}</div>
+        </div>
+      </a>`).join('');
+    whaleStatus.textContent = 'Live · updated ' + new Date().toLocaleTimeString();
+    whalesLoaded = true;
+  } catch(err){
+    whaleStatus.textContent = '';
+    whaleList.innerHTML = `<div class="error-card">Couldn't fetch whale-flagged headlines right now (${err.message}). Try again in a minute.</div>`;
+  }
+}
+
+// ---------- FAQ support assistant ----------
+const FAQ = [
+  { keys: ['signal','crossover','bullish','bearish','sma','moving average'],
+    a: "The trend signal compares a 7-day moving average to a 21-day moving average. If the short average is meaningfully above the long one, it's labeled 'bullish crossover'; meaningfully below is 'bearish crossover'. It's a momentum indicator, not a prediction." },
+  { keys: ['predict','future','accurate','accuracy','reliable'],
+    a: "No tool here predicts future prices. Crypto markets are highly volatile and largely unpredictable — this dashboard only summarizes recent momentum from public data." },
+  { keys: ['alert','notify','notification','threshold'],
+    a: "On the Alerts tab, pick a coin, a direction (rises above / falls below), and a price — it checks against live prices every 30 seconds in your browser and can send a desktop notification when triggered. Nothing leaves your device." },
+  { keys: ['permission','denied','not working','notifications blocked'],
+    a: "If alert notifications aren't showing up, your browser may have denied permission. Check your browser's site settings for this page and allow notifications, then re-add the alert." },
+  { keys: ['whale','big transaction','large transfer'],
+    a: "The Whales tab filters real crypto news headlines for whale-related terms — free raw on-chain transaction feeds don't really exist without a paid key, so this is real coverage of big moves rather than live wallet data." },
+  { keys: ['coin','coins','which','list','support'],
+    a: "Currently tracked: BTC, ETH, SOL, ADA, DOGE, LINK, LTC, and DOT — all commonly listed on both Coinbase and Crypto.com. Ask me 'what's BTC doing' for a live read on any of them." },
+  { keys: ['data','source','api','coingecko','cryptocompare'],
+    a: "Prices and history come from the CoinGecko public API. News and whale headlines come from CoinDesk and Cointelegraph RSS feeds via rss2json. All free, public, and keyless." },
+  { keys: ['coinbase','crypto.com','exchange','buy','trade','purchase'],
+    a: "The 'Buy on Coinbase' and 'Buy on Crypto.com' links on each card open that coin's official price/trade page on the exchange's own site. This dashboard doesn't connect to your accounts or execute trades itself." },
+  { keys: ['chart','stats','market cap','volume','ath','details'],
+    a: "Click 'View chart & data' on any coin card for a bigger 30-day chart plus market cap, 24h volume/high/low, circulating supply, and all-time high." },
+  { keys: ['sparkline','30-day','30 day','history'],
+    a: "Each coin card shows a 30-day sparkline built from daily closing prices via CoinGecko's market_chart endpoint. The bigger version is in the chart detail view." },
+  { keys: ['advice','buy','sell','invest','should i'],
+    a: "I can't give trading advice. Please treat everything here as educational, and do your own research (or talk to a licensed financial advisor) before making any trades." },
+  { keys: ['refresh','update','how often','stale'],
+    a: "Prices and alerts refresh automatically every 30 seconds while the tab is open. News and whale headlines load once when you open those tabs." },
+  { keys: ['mobile','phone','responsive','tablet'],
+    a: "The layout adapts to smaller screens, but for the smoothest experience (especially the chart modal) a larger screen works best." },
+  { keys: ['privacy','security','safe','collect','tracking'],
+    a: "Nothing you do here is sent to a server owned by this project — there is no backend. Alerts, portfolio, and settings live only in your browser. The one exception: if you turn on real-AI mode, your question and API key go directly from your browser to Anthropic's API." },
+  { keys: ['source code','github','open source','contribute','pull request'],
+    a: "This is an open-source passion project — check the repo's README for how to run it locally or contribute." },
+  { keys: ['license','mit'],
+    a: "It's MIT licensed — see the LICENSE file in the repo." },
+  { keys: ['error','broken','not loading','rate limit','failed'],
+    a: "If something won't load, it's usually the free public APIs rate-limiting requests. Check the browser console for the exact error, wait a bit, and try refreshing." },
+  { keys: ['ai','model','real ai','gpt','llm'],
+    a: "By default I run on a fixed set of canned answers, not a live model. Click the ⚙ above and turn on real-AI mode with your own Anthropic API key if you want me to handle open-ended questions the FAQ can't." },
+  { keys: ['thanks','thank you','ty','appreciate'],
+    a: "Anytime! 🐙" },
+  { keys: ['bye','goodbye','see ya'],
+    a: "See you around — happy (careful) trend-watching." },
+  { keys: ['hi','hello','hey'],
+    a: "Hey! Ask me about how the trend signals work, which coins are tracked, where the data comes from, or how a specific coin is doing right now." }
+];
+const FALLBACK = "I don't have a canned answer for that. Try asking about the trend signal, tracked coins, data sources, or turn on real-AI mode in ⚙ settings for open-ended questions.";
+
+// ---------- Data-aware replies ----------
+// Lets Inky answer live "how's BTC doing" style questions using data already
+// loaded into coinStore, without needing any AI model.
+const PRICE_INTENT = /\b(price|doing|trend|signal|up|down|worth|value|how'?s|how is|trading at)\b/i;
+
+function findMentionedCoin(text){
+  const t = text.toLowerCase();
+  return COINS.find(c =>
+    t.includes(c.symbol.toLowerCase()) ||
+    t.includes(c.id) ||
+    (c.id === 'bitcoin' && t.includes('btc')) ||
+    (c.id === 'dogecoin' && t.includes('doge'))
+  );
+}
+
+function coinDataReply(coin){
+  const entry = coinStore[coin.id];
+  if (!entry || !entry.market){
+    return `I don't have live data for ${coin.symbol} loaded yet — open the Prices tab first so it can fetch, then ask me again.`;
+  }
+  const price = fmtPrice(entry.market.current_price);
+  const change = entry.market.price_change_percentage_24h;
+  const changeTxt = change == null ? 'unknown 24h change' : `${change >= 0 ? '+' : ''}${change.toFixed(2)}% over 24h`;
+  const sig = entry.chartPrices ? trendSignal(entry.chartPrices) : null;
+  const sigTxt = sig ? `Momentum signal: ${sig.text}.` : '';
+  return `${coin.symbol} is at ${price} right now (${changeTxt}). ${sigTxt} Remember — this is a momentum read from public data, not a prediction.`;
+}
+
+// ---------- Optional real-AI mode ----------
+// Off by default. When a user opts in with their own Anthropic API key, unmatched
+// questions are sent directly from the browser to Anthropic's Messages API.
+const AI_MODEL = 'claude-haiku-4-5-20251001';
+const AI_SYSTEM_PROMPT = "You are Inky, the friendly octopus support assistant inside TentaTrend, a client-side crypto dashboard. " +
+  "It tracks live prices, a 7-day/21-day SMA momentum signal, news, whale-flagged headlines, and price alerts for BTC, ETH, SOL, ADA, DOGE, LINK, LTC, and DOT, using the CoinGecko API and CoinDesk/Cointelegraph RSS feeds. " +
+  "There is no backend and no accounts. Never give financial or trading advice — redirect to educational framing and suggest a licensed advisor for real decisions. Keep answers under 80 words, friendly, and precise.";
+
+async function askRealAI(question){
+  const apiKey = aiKeyInput.value.trim();
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      max_tokens: 300,
+      system: AI_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: question }]
+    })
+  });
+  if (!res.ok){
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error?.message || ('HTTP ' + res.status));
+  }
+  const data = await res.json();
+  const textBlock = (data.content || []).find(b => b.type === 'text');
+  return textBlock ? textBlock.text : "I didn't get a usable response back — try again.";
+}
+
+async function inkyReply(text){
+  const t = text.toLowerCase();
+
+  // 1) Fixed FAQ takes priority — fast, free, no key needed.
+  for (const entry of FAQ){
+    if (entry.keys.some(k => t.includes(k))) return { text: entry.a, source: 'faq' };
+  }
+
+  // 2) Data-aware: a coin name/symbol plus price/trend language, using live data already loaded.
+  const coin = findMentionedCoin(text);
+  if (coin && PRICE_INTENT.test(text)) return { text: coinDataReply(coin), source: 'data' };
+
+  // 3) Real AI, only if the user opted in and supplied a key.
+  if (aiModeToggle.checked && aiKeyInput.value.trim()){
+    try{
+      const reply = await askRealAI(text);
+      return { text: reply, source: 'ai' };
+    } catch(err){
+      return { text: `Real-AI request failed (${err.message}). Falling back: ${FALLBACK}`, source: 'error' };
+    }
+  }
+
+  return { text: FALLBACK, source: 'faq' };
+}
+
+const chatToggle = document.getElementById('chat-toggle');
+const chatPanel = document.getElementById('chat-panel');
+const chatClose = document.getElementById('chat-close');
+const chatLog = document.getElementById('chat-log');
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
+const chatSub = document.getElementById('chat-sub');
+const chatSettingsToggle = document.getElementById('chat-settings-toggle');
+const chatSettings = document.getElementById('chat-settings');
+const aiModeToggle = document.getElementById('ai-mode-toggle');
+const aiKeyInput = document.getElementById('ai-key-input');
+
+function addMsg(text, who){
+  const div = document.createElement('div');
+  div.className = 'msg ' + who;
+  div.textContent = text;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  return div;
+}
+
+let chatOpened = false;
+chatToggle.addEventListener('click', () => {
+  chatPanel.classList.toggle('open');
+  if (!chatOpened){
+    addMsg("Hey, I'm Inky 🐙 — ask me how the signals or data work, or how a specific coin is doing right now.", 'bot');
+    chatOpened = true;
+  }
+});
+chatClose.addEventListener('click', () => chatPanel.classList.remove('open'));
+
+chatSettingsToggle.addEventListener('click', () => chatSettings.classList.toggle('open'));
+
+aiModeToggle.addEventListener('change', () => {
+  aiKeyInput.classList.toggle('open', aiModeToggle.checked);
+  chatSub.textContent = aiModeToggle.checked
+    ? "FAQ + live data first; real Claude via your API key for anything else."
+    : "Instant answers from a fixed FAQ, with live data for price/trend questions.";
+  if (aiModeToggle.checked) aiKeyInput.focus();
+});
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const val = chatInput.value.trim();
+  if (!val) return;
+  addMsg(val, 'user');
+  chatInput.value = '';
+
+  const typingEl = addMsg('Inky is thinking…', 'typing');
+  try{
+    const { text, source } = await inkyReply(val);
+    typingEl.remove();
+    addMsg(text, source === 'error' ? 'bot error' : 'bot');
+  } catch(err){
+    typingEl.remove();
+    addMsg(`Something went wrong (${err.message}).`, 'bot error');
+  }
+});
+</script>
+</body>
+</html>
